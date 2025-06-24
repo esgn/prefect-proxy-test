@@ -1,0 +1,56 @@
+version: "3.9"
+services:
+
+  ### Prefect database
+  database:
+    image: postgres:alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=prefect
+    expose:
+      - 5432
+    volumes: 
+      - db:/var/lib/postgresql/data
+    networks:
+      - internal_net
+
+  ### Prefect Server API and UI
+  server:
+    image: prefecthq/prefect:3-python3.12
+    restart: always
+    volumes:
+      - prefect:/root/.prefect
+    entrypoint: ["/opt/prefect/entrypoint.sh", "prefect", "server", "start"]
+    environment:
+      - PREFECT_UI_URL=http://server:4200/api
+      - PREFECT_API_URL=http://server:4200/api
+      - PREFECT_SERVER_API_HOST=0.0.0.0
+      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://postgres:postgres@database:5432/prefect
+    ports:
+      - 4200:4200
+    depends_on:
+      - database
+    networks:
+      - internal_net
+
+  ### Squid proxy
+  forward_proxy:
+    image: ubuntu/squid
+    ports:
+      - "3128:3128"
+    volumes:
+      - ./squid.conf:/etc/squid/squid.conf
+    networks:
+      - internal_net
+      - external_net
+      
+volumes:
+  prefect:
+  db:
+
+networks:
+  internal_net:
+    internal: true
+  external_net:
