@@ -1,3 +1,5 @@
+**Update** : https://github.com/PrefectHQ/prefect/pull/18374 has fixed the issue. This repository may be used for more testing of Prefect using corporate proxy.
+
 # prefect-proxy-test
 
 Playground to test Prefect + Squid for possible incompatibilities.  
